@@ -1,5 +1,5 @@
 {
-  // Visit https://aka.ms/tsconfig to read more about this file
+  "include": ["src", "prisma", "prisma.config.ts"],
   "compilerOptions": {
     // File Layout
     // "rootDir": "./src",
@@ -7,7 +7,7 @@
 
     // Environment Settings
     // See also https://aka.ms/tsconfig/module
-    "module": "nodenext",
+    "module": "NodeNext",
     "target": "esnext",
     "types": [],
     // For nodejs:
@@ -40,5 +40,6 @@
     "noUncheckedSideEffectImports": true,
     "moduleDetection": "force",
     "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
   }
 }

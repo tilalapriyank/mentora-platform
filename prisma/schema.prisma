@@ -1,14 +1,83 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
-  provider = "prisma-client"
-  output   = "../src/generated/prisma"
+  provider = "prisma-client-js"
 }
 
 datasource db {
   provider = "postgresql"
+}
+
+enum Role {
+  PARENT
+  MENTOR
+}
+
+model User {
+  id           String   @id @default(uuid())
+  name         String
+  email        String   @unique
+  passwordHash String   @db.VarChar(255)
+  role         Role
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  students Student[] @relation("ParentStudents")
+  lessons  Lesson[]  @relation("MentorLessons")
+
+  @@map("users")
+}
+
+model Student {
+  id        String   @id @default(uuid())
+  name      String
+  parentId  String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  parent   User      @relation("ParentStudents", fields: [parentId], references: [id], onDelete: Restrict)
+  bookings Booking[]
+
+  @@map("students")
+}
+
+model Lesson {
+  id          String   @id @default(uuid())
+  title       String
+  description String
+  mentorId    String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  mentor   User      @relation("MentorLessons", fields: [mentorId], references: [id], onDelete: Restrict)
+  sessions Session[]
+  bookings Booking[]
+
+  @@map("lessons")
+}
+
+model Session {
+  id        String   @id @default(uuid())
+  lessonId  String
+  date      DateTime
+  topic     String
+  summary   String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  lesson Lesson @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+
+  @@map("sessions")
+}
+
+model Booking {
+  id        String   @id @default(uuid())
+  studentId String
+  lessonId  String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  student Student @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  lesson  Lesson  @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+
+  @@unique([studentId, lessonId])
+  @@map("bookings")
 }
