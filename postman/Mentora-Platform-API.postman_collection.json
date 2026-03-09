@@ -1,0 +1,346 @@
+{
+  "info": {
+    "name": "Mentora Platform API",
+    "description": "Full collection for Mentora backend: Auth, Students, Lessons, Bookings, Sessions, Join Session, LLM.\n\n**Setup:**\n1. Set `baseUrl` (default: http://localhost:3000).\n2. Run **Signup (Parent)** and **Signup (Mentor)** once to create users.\n3. Run **Login (Parent)** or **Login (Mentor)** — token is auto-saved to `token`.\n4. Use **Get Me** to verify. Then run Students/Lessons/Bookings/Sessions in order; use returned IDs in later requests.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:3000" },
+    { "key": "token", "value": "" },
+    { "key": "parentToken", "value": "" },
+    { "key": "mentorToken", "value": "" },
+    { "key": "studentId", "value": "" },
+    { "key": "lessonId", "value": "" },
+    { "key": "sessionId", "value": "" }
+  ],
+  "item": [
+    {
+      "name": "1. Auth",
+      "item": [
+        {
+          "name": "Signup (Parent)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "    const json = pm.response.json();",
+                  "    if (json.token) {",
+                  "        pm.collectionVariables.set('token', json.token);",
+                  "        pm.collectionVariables.set('parentToken', json.token);",
+                  "    }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Parent User\",\n  \"email\": \"parent@example.com\",\n  \"password\": \"password123\",\n  \"role\": \"PARENT\"\n}"
+            },
+            "url": "{{baseUrl}}/auth/signup",
+            "description": "Register a parent. Token is auto-saved to collection variables."
+          }
+        },
+        {
+          "name": "Signup (Mentor)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "    const json = pm.response.json();",
+                  "    if (json.token) {",
+                  "        pm.collectionVariables.set('mentorToken', json.token);",
+                  "    }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Mentor User\",\n  \"email\": \"mentor@example.com\",\n  \"password\": \"password123\",\n  \"role\": \"MENTOR\"\n}"
+            },
+            "url": "{{baseUrl}}/auth/signup",
+            "description": "Register a mentor. mentorToken is auto-saved."
+          }
+        },
+        {
+          "name": "Login (Parent)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    const json = pm.response.json();",
+                  "    if (json.token) {",
+                  "        pm.collectionVariables.set('token', json.token);",
+                  "        pm.collectionVariables.set('parentToken', json.token);",
+                  "    }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"parent@example.com\",\n  \"password\": \"password123\"\n}"
+            },
+            "url": "{{baseUrl}}/auth/login",
+            "description": "Login as parent. Token is auto-saved; use for Students, Bookings, Join Session."
+          }
+        },
+        {
+          "name": "Login (Mentor)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    const json = pm.response.json();",
+                  "    if (json.token) {",
+                  "        pm.collectionVariables.set('token', json.token);",
+                  "        pm.collectionVariables.set('mentorToken', json.token);",
+                  "    }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"mentor@example.com\",\n  \"password\": \"password123\"\n}"
+            },
+            "url": "{{baseUrl}}/auth/login",
+            "description": "Login as mentor. Token is auto-saved; use for Lessons, Sessions."
+          }
+        },
+        {
+          "name": "Get Me",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": "{{baseUrl}}/auth/me",
+            "description": "Get current user profile. Requires valid token."
+          }
+        }
+      ]
+    },
+    {
+      "name": "2. Students",
+      "item": [
+        {
+          "name": "Create Student",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "    const json = pm.response.json();",
+                  "    if (json.id) {",
+                  "        pm.collectionVariables.set('studentId', json.id);",
+                  "    }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{parentToken}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Alice Student\"\n}"
+            },
+            "url": "{{baseUrl}}/students",
+            "description": "Parent only. studentId is auto-saved for Bookings / Join Session."
+          }
+        },
+        {
+          "name": "Get Students",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{parentToken}}" }
+            ],
+            "url": "{{baseUrl}}/students",
+            "description": "List all students for the current parent."
+          }
+        }
+      ]
+    },
+    {
+      "name": "3. Lessons",
+      "item": [
+        {
+          "name": "Create Lesson",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "    const json = pm.response.json();",
+                  "    if (json.id) {",
+                  "        pm.collectionVariables.set('lessonId', json.id);",
+                  "    }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{mentorToken}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Introduction to Math\",\n  \"description\": \"Basic algebra and geometry for beginners.\"\n}"
+            },
+            "url": "{{baseUrl}}/lessons",
+            "description": "Mentor only. lessonId is auto-saved for Sessions and Get Lesson Sessions."
+          }
+        },
+        {
+          "name": "Get Lesson Sessions",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": "{{baseUrl}}/lessons/{{lessonId}}/sessions",
+            "description": "List sessions for a lesson. Set lessonId or use from Create Lesson."
+          }
+        }
+      ]
+    },
+    {
+      "name": "4. Bookings",
+      "item": [
+        {
+          "name": "Create Booking",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{parentToken}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"studentId\": \"{{studentId}}\",\n  \"lessonId\": \"{{lessonId}}\"\n}"
+            },
+            "url": "{{baseUrl}}/bookings",
+            "description": "Parent only. Student must belong to parent; lesson must exist. Run after Create Student and Create Lesson."
+          }
+        }
+      ]
+    },
+    {
+      "name": "5. Sessions",
+      "item": [
+        {
+          "name": "Create Session",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "    const json = pm.response.json();",
+                  "    if (json.id) {",
+                  "        pm.collectionVariables.set('sessionId', json.id);",
+                  "    }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{mentorToken}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"lessonId\": \"{{lessonId}}\",\n  \"date\": \"2025-03-15T10:00:00.000Z\",\n  \"topic\": \"Linear equations\",\n  \"summary\": \"Covered basics of solving for x.\"\n}"
+            },
+            "url": "{{baseUrl}}/sessions",
+            "description": "Mentor only. Lesson must belong to mentor. sessionId is auto-saved for Join Session."
+          }
+        }
+      ]
+    },
+    {
+      "name": "6. Join Session",
+      "item": [
+        {
+          "name": "Join Session",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{parentToken}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"studentId\": \"{{studentId}}\"\n}"
+            },
+            "url": "{{baseUrl}}/sessions/{{sessionId}}/join",
+            "description": "Parent only. Student must be booked on the lesson of this session. Run after Create Booking and Create Session."
+          }
+        }
+      ]
+    },
+    {
+      "name": "7. LLM",
+      "item": [
+        {
+          "name": "Summarize Text",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"text\": \"Artificial intelligence is transforming how we work and learn. Machine learning models can now summarize long documents, answer questions, and assist in writing. In education, AI helps personalize learning and automate grading. Businesses use AI for customer support and data analysis. The technology continues to evolve rapidly, raising both opportunities and ethical questions.\"\n}"
+            },
+            "url": "{{baseUrl}}/llm/summarize",
+            "description": "No auth. Min 50 chars, max 10000. Rate limited (10/min per IP). Requires GEMINI_API_KEY in server .env."
+          }
+        }
+      ]
+    }
+  ]
+}

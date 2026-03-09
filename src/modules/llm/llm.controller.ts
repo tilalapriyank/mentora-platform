@@ -28,7 +28,14 @@ export async function summarizeText(req: Request, res: Response) {
   try {
     const summary = await summarize(text.trim());
     return res.json({ summary, model: geminiModelName });
-  } catch {
+  } catch (err: unknown) {
+    console.error("[LLM summarize error]", err);
+    const status = (err as { status?: number })?.status;
+    if (status === 429) {
+      return res.status(429).json({
+        error: "LLM quota or rate limit exceeded. Try again later or check your Gemini API plan at https://ai.google.dev/gemini-api/docs/rate-limits",
+      });
+    }
     return res.status(502).json({ error: "Summarization failed. Please try again." });
   }
 }
