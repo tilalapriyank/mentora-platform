@@ -1,9 +1,9 @@
 import type { Request, Response } from "express";
+import { geminiModelName } from "../../config/gemini.ts";
 import { summarize } from "./llm.service.ts";
 
 const MIN_LENGTH = 50;
 const MAX_LENGTH = 10_000;
-const MODEL_NAME = "gemini-1.5-flash";
 
 export async function summarizeText(req: Request, res: Response) {
   const text = req.body?.text;
@@ -27,7 +27,7 @@ export async function summarizeText(req: Request, res: Response) {
 
   try {
     const summary = await summarize(text.trim());
-    return res.json({ summary, model: MODEL_NAME });
+    return res.json({ summary, model: geminiModelName });
   } catch {
     return res.status(502).json({ error: "Summarization failed. Please try again." });
   }
