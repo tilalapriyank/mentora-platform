@@ -57,3 +57,59 @@ export async function getLessonSessions(req: Request, res: Response) {
 
   res.json(sessions);
 }
+
+export async function joinSession(req: Request, res: Response) {
+  try {
+    const user = (req as Request & { user: { id: string } }).user;
+    const sessionId = req.params?.id;
+    const studentId = req.body?.studentId;
+
+    if (typeof sessionId !== "string" || !sessionId.trim()) {
+      return res.status(400).json({ error: "Session id is required" });
+    }
+    if (!studentId || typeof studentId !== "string" || !studentId.trim()) {
+      return res.status(400).json({ error: "studentId is required" });
+    }
+
+    const session = await prisma.session.findUnique({
+      where: { id: sessionId.trim() },
+      include: { lesson: true },
+    });
+    if (!session) {
+      return res.status(404).json({ error: "Session not found" });
+    }
+
+    const student = await prisma.student.findFirst({
+      where: { id: studentId.trim(), parentId: user.id },
+    });
+    if (!student) {
+      return res.status(403).json({ error: "Student not found or you are not the parent" });
+    }
+
+    const booking = await prisma.booking.findUnique({
+      where: {
+        studentId_lessonId: { studentId: student.id, lessonId: session.lessonId },
+      },
+    });
+    if (!booking) {
+      return res.status(403).json({
+        error: "Student must be booked on this lesson before joining the session",
+      });
+    }
+
+    const joinRecord = await prisma.sessionJoin.create({
+      data: {
+        sessionId: session.id,
+        studentId: student.id,
+      },
+    });
+
+    res.status(201).json(joinRecord);
+  } catch (e: unknown) {
+    const err = e as { code?: string };
+    if (err.code === "P2002") {
+      return res.status(409).json({ error: "Student has already joined this session" });
+    }
+    res.status(400).json({ error: (e as Error).message });
+  }
+}
